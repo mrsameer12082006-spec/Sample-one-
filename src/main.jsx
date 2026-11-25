@@ -9,6 +9,7 @@ import {
   ArrowRight,
   ChevronRight,
   ChevronLeft,
+  ChevronDown,
   X,
   Zap,
   ShieldCheck,
@@ -22,6 +23,17 @@ import {
   Sparkles
 } from 'lucide-react';
 import './styles.css';
+
+// Member Space components & data
+import MemberLayout from './components/member/MemberLayout';
+import OverviewPage from './components/member/OverviewPage';
+import BookingsPage from './components/member/BookingsPage';
+import RewardsPage from './components/member/RewardsPage';
+import PersonalInfoPage from './components/member/PersonalInfoPage';
+import WalletPage from './components/member/WalletPage';
+import PassModal from './components/member/PassModal';
+import { MEMBER_PROFILE, IMMINENT_PASS } from './data/memberData';
+
 
 // ==========================================
 // BRAND ICONS (SVG)
@@ -210,6 +222,11 @@ function App() {
   const [likedEvents, setLikedEvents] = useState(new Set());
   const [spotlightIndex, setSpotlightIndex] = useState(0);
   
+  // Member Space Navigation State (Default to 'member' so requested pages show immediately)
+  const [currentView, setCurrentView] = useState('member');
+  const [memberTab, setMemberTab] = useState('overview');
+  const [activePassModal, setActivePassModal] = useState(null);
+
   // Modals state
   const [selectedEventForBooking, setSelectedEventForBooking] = useState(null);
   const [ticketQuantity, setTicketQuantity] = useState(1);
@@ -282,13 +299,28 @@ function App() {
           ======================================================== */}
       <header className="navbar">
         <div className="nav-left">
-          <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}>
-            Showora
+          <a
+            href="#"
+            className="brand-logo"
+            onClick={(e) => {
+              e.preventDefault();
+              setCurrentView('events');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          >
+            Showora.
           </a>
           <nav>
             <ul className="nav-menu">
               <li>
-                <a href="#events" className="nav-link active">
+                <a
+                  href="#events"
+                  className={`nav-link ${currentView === 'events' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentView('events');
+                  }}
+                >
                   Events
                 </a>
               </li>
@@ -298,6 +330,7 @@ function App() {
                   className="nav-link"
                   onClick={(e) => {
                     e.preventDefault();
+                    setCurrentView('events');
                     setActiveCategory('MOVIES');
                     const el = document.getElementById('events');
                     if (el) el.scrollIntoView({ behavior: 'smooth' });
@@ -308,15 +341,40 @@ function App() {
               </li>
               <li>
                 <a
-                  href="#likes"
+                  href="#venues"
+                  className={`nav-link ${currentView === 'member' && memberTab === 'bookings' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentView('member');
+                    setMemberTab('bookings');
+                  }}
+                >
+                  Venues
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#categories"
                   className="nav-link"
                   onClick={(e) => {
                     e.preventDefault();
-                    showToast(`You have ${likedEvents.size} liked events`);
+                    setCurrentView('events');
                   }}
                 >
-                  <Heart size={15} color={likedEvents.size > 0 ? '#ff007a' : 'currentColor'} fill={likedEvents.size > 0 ? '#ff007a' : 'none'} />
-                  Likes {likedEvents.size > 0 && `(${likedEvents.size})`}
+                  Categories
+                </a>
+              </li>
+              <li>
+                <a
+                  href="#experiences"
+                  className={`nav-link ${currentView === 'member' && memberTab === 'overview' ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentView('member');
+                    setMemberTab('overview');
+                  }}
+                >
+                  Experiences
                 </a>
               </li>
             </ul>
@@ -326,33 +384,107 @@ function App() {
         <div className="nav-right">
           <button
             className="location-picker"
-            onClick={(e) => e.preventDefault()}
+            onClick={(e) => {
+              e.preventDefault();
+              setShowLocationModal(true);
+            }}
             title="Location"
           >
-            <MapPin size={16} color="#ff3399" />
+            <MapPin size={15} color="#ec4899" />
             <span>{currentCity}</span>
+            <ChevronDown size={13} color="#a59db8" />
           </button>
 
           <div className="search-input-pill">
-            <Search size={16} color="#c084fc" />
+            <Search size={15} color="#c084fc" />
             <input
               type="text"
-              placeholder="Search events, movies..."
+              placeholder="Search artist, Event"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            {searchQuery && (
+            {searchQuery ? (
               <X size={14} style={{ cursor: 'pointer' }} onClick={() => setSearchQuery('')} />
+            ) : (
+              <span style={{ fontSize: '11px', color: '#736987', fontFamily: 'monospace' }}>⌘K</span>
             )}
           </div>
 
-          <button className="btn-join" onClick={(e) => e.preventDefault()}>
-            JOIN
+          {/* User Profile Pill matching screenshots */}
+          <button
+            className={`user-profile-nav-pill ${currentView === 'member' ? 'active' : ''}`}
+            onClick={() => {
+              setCurrentView('member');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            title="Member Space"
+          >
+            <div className="user-nav-avatar">DA</div>
+            <div className="user-nav-meta">
+              <span className="user-nav-name">{MEMBER_PROFILE.fullName}</span>
+              <span className="user-nav-tier">GOLD PASS</span>
+            </div>
           </button>
         </div>
       </header>
 
-      <main>
+      {/* ========================================================
+          MAIN VIEW CONTAINER: MEMBER SPACE vs EVENTS DISCOVERY
+          ======================================================== */}
+      {currentView === 'member' && (
+        <main className="member-main-wrapper">
+          <MemberLayout
+            activeTab={memberTab}
+            onSelectTab={(tabId) => {
+              setMemberTab(tabId);
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onToast={showToast}
+            onDisconnect={() => {
+              setCurrentView('events');
+              showToast('Switched to public events browse');
+            }}
+          >
+            {memberTab === 'overview' && (
+              <OverviewPage
+                onOpenPass={(pass) => setActivePassModal(pass)}
+                onSelectTab={setMemberTab}
+                onToast={showToast}
+                onOpenBookModal={openBooking}
+              />
+            )}
+            {memberTab === 'bookings' && (
+              <BookingsPage
+                onOpenPass={(pass) => setActivePassModal(pass)}
+                onToast={showToast}
+                onOpenBookModal={openBooking}
+              />
+            )}
+            {memberTab === 'rewards' && (
+              <RewardsPage
+                onOpenPass={(pass) => setActivePassModal(pass)}
+                onSelectTab={setMemberTab}
+                onToast={showToast}
+              />
+            )}
+            {memberTab === 'profile' && (
+              <PersonalInfoPage
+                onToast={showToast}
+              />
+            )}
+            {memberTab === 'wallet' && (
+              <WalletPage
+                onOpenPass={(pass) => setActivePassModal(pass)}
+                onToast={showToast}
+              />
+            )}
+          </MemberLayout>
+        </main>
+      )}
+
+      {currentView === 'events' && (
+        <main className="events-catalog-main">
+
         {/* ========================================================
             2. HERO SECTION
             ======================================================== */}
@@ -790,106 +922,78 @@ function App() {
           </div>
         </section>
       </main>
+      )}
 
       {/* ========================================================
-          9. FOOTER SECTION
+          9. NOCTURNE FOOTER SECTION (EXACT FIGMA MATCH)
           ======================================================== */}
-      <footer className="footer-wrap">
-        <div className="footer-top">
-          <div className="footer-brand">
-            <span className="brand-logo">Showora</span>
-            <div className="brand-motto">BOOK THE VIBE.</div>
-            <p className="brand-desc">
-              Your premier platform for discovering and booking the most exciting live events, movies, and experiences in your city.
-            </p>
-            <div className="social-links">
-              <a href="#" className="social-pill" aria-label="Instagram" onClick={(e) => { e.preventDefault(); showToast('Instagram @showora'); }}>
-                <InstagramIcon size={17} />
-              </a>
-              <a href="#" className="social-pill" aria-label="X Twitter" onClick={(e) => { e.preventDefault(); showToast('Twitter @showora'); }}>
-                <XIcon size={15} />
-              </a>
-              <a href="#" className="social-pill" aria-label="LinkedIn" onClick={(e) => { e.preventDefault(); showToast('LinkedIn Showora Studio'); }}>
-                <LinkedinIcon size={17} />
-              </a>
-            </div>
-          </div>
-
-          <div className="footer-column">
-            <h4>DISCOVER</h4>
-            <ul className="footer-links">
-              <li>
-                <a
-                  href="#events"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setActiveCategory('ALL');
-                    setSearchQuery('');
-                    const el = document.getElementById('events');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  › Events
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#movies"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setActiveCategory('MOVIES');
-                    setSearchQuery('');
-                    const el = document.getElementById('events');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  › Movies
-                </a>
-              </li>
-              <li><a href="#venues" onClick={(e) => e.preventDefault()}>› Venues</a></li>
+      <footer className="nocturne-footer-wrap">
+        <div className="nocturne-footer-grid">
+          <div className="nocturne-col">
+            <h5 className="nocturne-col-title">CURATED NIGHTLIFE</h5>
+            <ul className="nocturne-links">
+              <li>Warehouse Raves</li>
+              <li>Rooftop Soundscapes</li>
+              <li>Underground Techno</li>
+              <li>Speakeasy Sessions</li>
             </ul>
           </div>
 
-          <div className="footer-column">
-            <h4>COMPANY</h4>
-            <ul className="footer-links">
-              <li><a href="#about" onClick={(e) => e.preventDefault()}>› About Us</a></li>
-              <li><a href="#contact" onClick={(e) => e.preventDefault()}>› Contact Us</a></li>
-              <li><a href="#post" onClick={(e) => e.preventDefault()}>› Post Event</a></li>
+          <div className="nocturne-col">
+            <h5 className="nocturne-col-title">METROPOLITAN HUBS</h5>
+            <ul className="nocturne-links">
+              <li>Delhi NCR</li>
+              <li>Mumbai Coastal</li>
+              <li>Bengaluru Underground</li>
+              <li>Goa Bohemian Gigs</li>
             </ul>
           </div>
 
-          <div className="footer-column">
-            <h4>NEED HELP?</h4>
-            <div className="contact-item">
-              <Mail size={18} className="contact-icon" />
-              <div>
-                <div className="contact-label">SUPPORT EMAIL</div>
-                <a href="mailto:hi@showora.in" className="contact-val" style={{ textDecoration: 'none' }}>
-                  hi@showora.in
-                </a>
-              </div>
-            </div>
-            <div className="contact-item">
-              <MapPin size={18} className="contact-icon" />
-              <div>
-                <div className="contact-label">HEADQUARTERS</div>
-                <div className="contact-val">New Delhi, India</div>
-              </div>
-            </div>
+          <div className="nocturne-col">
+            <h5 className="nocturne-col-title">EXPERIENCES & TRAVEL</h5>
+            <ul className="nocturne-links">
+              <li>Desert Glamping & Beats</li>
+              <li>Private Island Collectives</li>
+              <li>High-Altitude Festivals</li>
+              <li>Cinema Al Fresco</li>
+            </ul>
+          </div>
+
+          <div className="nocturne-col">
+            <h5 className="nocturne-col-title">PROTOCOL & ACCESS</h5>
+            <ul className="nocturne-links">
+              <li>Concierge Membership</li>
+              <li>Host an Experience</li>
+              <li>Press & Media Kits</li>
+              <li>Privacy & Discretion Protocol</li>
+            </ul>
           </div>
         </div>
 
-        <div className="footer-bottom">
-          <div>© 2026 Showora Studio. All rights reserved.</div>
-          <div className="footer-legal-links">
-            <a href="#privacy" onClick={(e) => e.preventDefault()}>PRIVACY POLICY</a>
-            <a href="#terms" onClick={(e) => e.preventDefault()}>TERMS</a>
-            <a href="#copyright" onClick={(e) => e.preventDefault()}>COPYRIGHT</a>
-            <a href="#refund" onClick={(e) => e.preventDefault()}>REFUND POLICY</a>
+        <div className="nocturne-footer-bottom">
+          <div className="nocturne-footer-left">
+            <span className="brand-logo" style={{ fontSize: '20px', color: '#ff007a', marginRight: '10px' }}>
+              Showora.
+            </span>
+            <span>© 2026 Showora Studio. All rights reserved.</span>
+          </div>
+
+          <div className="nocturne-footer-right">
+            <a href="#security" onClick={(e) => { e.preventDefault(); showToast('Security Protocol Level 1 Active'); }}>
+              Security Protocol
+            </a>
+            <span className="sep">•</span>
+            <a href="#terms" onClick={(e) => { e.preventDefault(); showToast('Terms of Vibe 2026'); }}>
+              Terms of Vibe
+            </a>
+            <span className="sep">•</span>
+            <a href="#discretion" onClick={(e) => { e.preventDefault(); showToast('Discretion Guarantee Verified'); }}>
+              Discretion Guarantee
+            </a>
           </div>
         </div>
       </footer>
+
 
       {/* ========================================================
           10. INTERACTIVE BOOKING MODAL
@@ -1136,7 +1240,18 @@ function App() {
       )}
 
       {/* ========================================================
-          13. TOAST NOTIFICATION
+          13. DYNAMIC DIGITAL PASS MODAL
+          ======================================================== */}
+      {activePassModal && (
+        <PassModal
+          passData={activePassModal}
+          onClose={() => setActivePassModal(null)}
+          onToast={showToast}
+        />
+      )}
+
+      {/* ========================================================
+          14. TOAST NOTIFICATION
           ======================================================== */}
       {toastMessage && (
         <div className="toast-notification">
