@@ -32,6 +32,7 @@ import RewardsPage from './components/member/RewardsPage';
 import PersonalInfoPage from './components/member/PersonalInfoPage';
 import WalletPage from './components/member/WalletPage';
 import PassModal from './components/member/PassModal';
+import AuthPage from './components/auth/AuthPage';
 import { MEMBER_PROFILE, IMMINENT_PASS } from './data/memberData';
 
 
@@ -222,10 +223,60 @@ function App() {
   const [likedEvents, setLikedEvents] = useState(new Set());
   const [spotlightIndex, setSpotlightIndex] = useState(0);
   
-  // Member Space Navigation State (Default to 'member' so requested pages show immediately)
-  const [currentView, setCurrentView] = useState('member');
-  const [memberTab, setMemberTab] = useState('overview');
+  // Authentication state (defaults to false for public browse)
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('showora_auth') === 'true';
+  });
+
+  // Current logged-in user profile
+  const [currentUser, setCurrentUser] = useState(() => {
+    try {
+      const saved = localStorage.getItem('showora_user');
+      return saved ? JSON.parse(saved) : MEMBER_PROFILE;
+    } catch {
+      return MEMBER_PROFILE;
+    }
+  });
+
+  // Main View State: Defaults to 'events' (homepage)
+  const [currentView, setCurrentView] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash === 'auth') return 'auth';
+      if (['overview', 'bookings', 'rewards', 'profile', 'personal-info', 'wallet', 'member'].includes(hash)) {
+        return 'member';
+      }
+    }
+    return 'events';
+  });
+
+  const [memberTab, setMemberTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash === 'profile' || hash === 'personal-info') return 'profile';
+      if (['overview', 'bookings', 'rewards', 'wallet'].includes(hash)) return hash;
+    }
+    return 'overview';
+  });
   const [activePassModal, setActivePassModal] = useState(null);
+
+  // Sync with browser hash changes
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.toLowerCase().replace('#', '');
+      if (hash === 'auth') {
+        setCurrentView('auth');
+      } else if (['overview', 'bookings', 'rewards', 'profile', 'personal-info', 'wallet', 'member'].includes(hash)) {
+        setCurrentView('member');
+        if (hash === 'profile' || hash === 'personal-info') setMemberTab('profile');
+        else if (hash !== 'member') setMemberTab(hash);
+      } else if (!hash || hash === 'events') {
+        setCurrentView('events');
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
 
   // Modals state
   const [selectedEventForBooking, setSelectedEventForBooking] = useState(null);
@@ -295,138 +346,198 @@ function App() {
   return (
     <div className="site-wrapper">
       {/* ========================================================
-          1. NAVIGATION BAR
+          1. NAVIGATION BAR (Hidden on dedicated Auth page)
           ======================================================== */}
-      <header className="navbar">
-        <div className="nav-left">
-          <a
-            href="#"
-            className="brand-logo"
-            onClick={(e) => {
-              e.preventDefault();
-              setCurrentView('events');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          >
-            Showora.
-          </a>
-          <nav>
-            <ul className="nav-menu">
-              <li>
-                <a
-                  href="#events"
-                  className={`nav-link ${currentView === 'events' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentView('events');
-                  }}
-                >
-                  Events
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#movies"
-                  className="nav-link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentView('events');
-                    setActiveCategory('MOVIES');
-                    const el = document.getElementById('events');
-                    if (el) el.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                >
-                  Movies
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#venues"
-                  className={`nav-link ${currentView === 'member' && memberTab === 'bookings' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentView('member');
-                    setMemberTab('bookings');
-                  }}
-                >
-                  Venues
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#categories"
-                  className="nav-link"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentView('events');
-                  }}
-                >
-                  Categories
-                </a>
-              </li>
-              <li>
-                <a
-                  href="#experiences"
-                  className={`nav-link ${currentView === 'member' && memberTab === 'overview' ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setCurrentView('member');
-                    setMemberTab('overview');
-                  }}
-                >
-                  Experiences
-                </a>
-              </li>
-            </ul>
-          </nav>
-        </div>
-
-        <div className="nav-right">
-          <button
-            className="location-picker"
-            onClick={(e) => {
-              e.preventDefault();
-              setShowLocationModal(true);
-            }}
-            title="Location"
-          >
-            <MapPin size={15} color="#ec4899" />
-            <span>{currentCity}</span>
-            <ChevronDown size={13} color="#a59db8" />
-          </button>
-
-          <div className="search-input-pill">
-            <Search size={15} color="#c084fc" />
-            <input
-              type="text"
-              placeholder="Search artist, Event"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            {searchQuery ? (
-              <X size={14} style={{ cursor: 'pointer' }} onClick={() => setSearchQuery('')} />
-            ) : (
-              <span style={{ fontSize: '11px', color: '#736987', fontFamily: 'monospace' }}>⌘K</span>
-            )}
+      {currentView !== 'auth' && (
+        <header className="navbar">
+          <div className="nav-left">
+            <a
+              href="#"
+              className="brand-logo"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentView('events');
+                window.location.hash = '';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            >
+              Showora.
+            </a>
+            <nav>
+              <ul className="nav-menu">
+                <li>
+                  <a
+                    href="#events"
+                    className={`nav-link ${currentView === 'events' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentView('events');
+                      window.location.hash = '';
+                    }}
+                  >
+                    Events
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#movies"
+                    className="nav-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentView('events');
+                      setActiveCategory('MOVIES');
+                      const el = document.getElementById('events');
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    Movies
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#venues"
+                    className={`nav-link ${currentView === 'member' && memberTab === 'bookings' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!isAuthenticated) {
+                        setCurrentView('auth');
+                        window.location.hash = 'auth';
+                        showToast('Please sign in to view your venues & bookings');
+                      } else {
+                        setCurrentView('member');
+                        setMemberTab('bookings');
+                        window.location.hash = 'bookings';
+                      }
+                    }}
+                  >
+                    Venues
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#categories"
+                    className="nav-link"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setCurrentView('events');
+                      window.location.hash = '';
+                    }}
+                  >
+                    Categories
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#experiences"
+                    className={`nav-link ${currentView === 'member' && memberTab === 'overview' ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      if (!isAuthenticated) {
+                        setCurrentView('auth');
+                        window.location.hash = 'auth';
+                        showToast('Please sign in to view your member experiences');
+                      } else {
+                        setCurrentView('member');
+                        setMemberTab('overview');
+                        window.location.hash = 'overview';
+                      }
+                    }}
+                  >
+                    Experiences
+                  </a>
+                </li>
+              </ul>
+            </nav>
           </div>
 
-          {/* User Profile Pill matching screenshots */}
-          <button
-            className={`user-profile-nav-pill ${currentView === 'member' ? 'active' : ''}`}
-            onClick={() => {
-              setCurrentView('member');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            title="Member Space"
-          >
-            <div className="user-nav-avatar">DA</div>
-            <div className="user-nav-meta">
-              <span className="user-nav-name">{MEMBER_PROFILE.fullName}</span>
-              <span className="user-nav-tier">GOLD PASS</span>
+          <div className="nav-right">
+            <button
+              className="location-picker"
+              onClick={(e) => {
+                e.preventDefault();
+                setShowLocationModal(true);
+              }}
+              title="Location"
+            >
+              <MapPin size={15} color="#ec4899" />
+              <span>{currentCity}</span>
+              <ChevronDown size={13} color="#a59db8" />
+            </button>
+
+            <div className="search-input-pill">
+              <Search size={15} color="#c084fc" />
+              <input
+                type="text"
+                placeholder="Search artist, Event"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery ? (
+                <X size={14} style={{ cursor: 'pointer' }} onClick={() => setSearchQuery('')} />
+              ) : (
+                <span style={{ fontSize: '11px', color: '#736987', fontFamily: 'monospace' }}>⌘K</span>
+              )}
             </div>
-          </button>
-        </div>
-      </header>
+
+            {/* User Profile Pill when authenticated, or JOIN button when unauthenticated */}
+            {isAuthenticated ? (
+              <button
+                className={`user-profile-nav-pill ${currentView === 'member' ? 'active' : ''}`}
+                onClick={() => {
+                  setCurrentView('member');
+                  setMemberTab('overview');
+                  window.location.hash = 'overview';
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                title="Member Space"
+              >
+                <div className="user-nav-avatar">{currentUser.initials || 'VIP'}</div>
+                <div className="user-nav-meta">
+                  <span className="user-nav-name">{currentUser.fullName}</span>
+                  <span className="user-nav-tier">GOLD PASS</span>
+                </div>
+              </button>
+            ) : (
+              <button
+                className="btn-join"
+                onClick={() => {
+                  setCurrentView('auth');
+                  window.location.hash = 'auth';
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                title="Join or Sign In"
+              >
+                JOIN
+              </button>
+            )}
+          </div>
+        </header>
+      )}
+
+      {/* ========================================================
+          DEDICATED STANDALONE AUTH PAGE (Matching Screenshot 1)
+          ======================================================== */}
+      {currentView === 'auth' && (
+        <AuthPage
+          onLoginSuccess={(userData) => {
+            const user = userData || MEMBER_PROFILE;
+            setIsAuthenticated(true);
+            setCurrentUser(user);
+            localStorage.setItem('showora_auth', 'true');
+            localStorage.setItem('showora_user', JSON.stringify(user));
+            setCurrentView('member');
+            setMemberTab('overview');
+            window.location.hash = 'overview';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onCancel={() => {
+            setCurrentView('events');
+            window.location.hash = '';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          onToast={showToast}
+        />
+      )}
 
       {/* ========================================================
           MAIN VIEW CONTAINER: MEMBER SPACE vs EVENTS DISCOVERY
@@ -437,12 +548,19 @@ function App() {
             activeTab={memberTab}
             onSelectTab={(tabId) => {
               setMemberTab(tabId);
+              window.location.hash = tabId === 'profile' ? 'personal-info' : tabId;
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
             onToast={showToast}
             onDisconnect={() => {
+              setIsAuthenticated(false);
+              setCurrentUser(MEMBER_PROFILE);
+              localStorage.removeItem('showora_auth');
+              localStorage.removeItem('showora_user');
               setCurrentView('events');
-              showToast('Switched to public events browse');
+              window.location.hash = '';
+              showToast('Disconnected session. Logged out successfully.');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           >
             {memberTab === 'overview' && (
@@ -925,74 +1043,76 @@ function App() {
       )}
 
       {/* ========================================================
-          9. NOCTURNE FOOTER SECTION (EXACT FIGMA MATCH)
+          9. NOCTURNE FOOTER SECTION (EXACT FIGMA MATCH - HIDDEN ON AUTH)
           ======================================================== */}
-      <footer className="nocturne-footer-wrap">
-        <div className="nocturne-footer-grid">
-          <div className="nocturne-col">
-            <h5 className="nocturne-col-title">CURATED NIGHTLIFE</h5>
-            <ul className="nocturne-links">
-              <li>Warehouse Raves</li>
-              <li>Rooftop Soundscapes</li>
-              <li>Underground Techno</li>
-              <li>Speakeasy Sessions</li>
-            </ul>
+      {currentView !== 'auth' && (
+        <footer className="nocturne-footer-wrap">
+          <div className="nocturne-footer-grid">
+            <div className="nocturne-col">
+              <h5 className="nocturne-col-title">CURATED NIGHTLIFE</h5>
+              <ul className="nocturne-links">
+                <li>Warehouse Raves</li>
+                <li>Rooftop Soundscapes</li>
+                <li>Underground Techno</li>
+                <li>Speakeasy Sessions</li>
+              </ul>
+            </div>
+
+            <div className="nocturne-col">
+              <h5 className="nocturne-col-title">METROPOLITAN HUBS</h5>
+              <ul className="nocturne-links">
+                <li>Delhi NCR</li>
+                <li>Mumbai Coastal</li>
+                <li>Bengaluru Underground</li>
+                <li>Goa Bohemian Gigs</li>
+              </ul>
+            </div>
+
+            <div className="nocturne-col">
+              <h5 className="nocturne-col-title">EXPERIENCES & TRAVEL</h5>
+              <ul className="nocturne-links">
+                <li>Desert Glamping & Beats</li>
+                <li>Private Island Collectives</li>
+                <li>High-Altitude Festivals</li>
+                <li>Cinema Al Fresco</li>
+              </ul>
+            </div>
+
+            <div className="nocturne-col">
+              <h5 className="nocturne-col-title">PROTOCOL & ACCESS</h5>
+              <ul className="nocturne-links">
+                <li>Concierge Membership</li>
+                <li>Host an Experience</li>
+                <li>Press & Media Kits</li>
+                <li>Privacy & Discretion Protocol</li>
+              </ul>
+            </div>
           </div>
 
-          <div className="nocturne-col">
-            <h5 className="nocturne-col-title">METROPOLITAN HUBS</h5>
-            <ul className="nocturne-links">
-              <li>Delhi NCR</li>
-              <li>Mumbai Coastal</li>
-              <li>Bengaluru Underground</li>
-              <li>Goa Bohemian Gigs</li>
-            </ul>
-          </div>
+          <div className="nocturne-footer-bottom">
+            <div className="nocturne-footer-left">
+              <span className="brand-logo" style={{ fontSize: '20px', color: '#ff007a', marginRight: '10px' }}>
+                Showora.
+              </span>
+              <span>© 2026 Showora Studio. All rights reserved.</span>
+            </div>
 
-          <div className="nocturne-col">
-            <h5 className="nocturne-col-title">EXPERIENCES & TRAVEL</h5>
-            <ul className="nocturne-links">
-              <li>Desert Glamping & Beats</li>
-              <li>Private Island Collectives</li>
-              <li>High-Altitude Festivals</li>
-              <li>Cinema Al Fresco</li>
-            </ul>
+            <div className="nocturne-footer-right">
+              <a href="#security" onClick={(e) => { e.preventDefault(); showToast('Security Protocol Level 1 Active'); }}>
+                Security Protocol
+              </a>
+              <span className="sep">•</span>
+              <a href="#terms" onClick={(e) => { e.preventDefault(); showToast('Terms of Vibe 2026'); }}>
+                Terms of Vibe
+              </a>
+              <span className="sep">•</span>
+              <a href="#discretion" onClick={(e) => { e.preventDefault(); showToast('Discretion Guarantee Verified'); }}>
+                Discretion Guarantee
+              </a>
+            </div>
           </div>
-
-          <div className="nocturne-col">
-            <h5 className="nocturne-col-title">PROTOCOL & ACCESS</h5>
-            <ul className="nocturne-links">
-              <li>Concierge Membership</li>
-              <li>Host an Experience</li>
-              <li>Press & Media Kits</li>
-              <li>Privacy & Discretion Protocol</li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="nocturne-footer-bottom">
-          <div className="nocturne-footer-left">
-            <span className="brand-logo" style={{ fontSize: '20px', color: '#ff007a', marginRight: '10px' }}>
-              Showora.
-            </span>
-            <span>© 2026 Showora Studio. All rights reserved.</span>
-          </div>
-
-          <div className="nocturne-footer-right">
-            <a href="#security" onClick={(e) => { e.preventDefault(); showToast('Security Protocol Level 1 Active'); }}>
-              Security Protocol
-            </a>
-            <span className="sep">•</span>
-            <a href="#terms" onClick={(e) => { e.preventDefault(); showToast('Terms of Vibe 2026'); }}>
-              Terms of Vibe
-            </a>
-            <span className="sep">•</span>
-            <a href="#discretion" onClick={(e) => { e.preventDefault(); showToast('Discretion Guarantee Verified'); }}>
-              Discretion Guarantee
-            </a>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
 
 
       {/* ========================================================

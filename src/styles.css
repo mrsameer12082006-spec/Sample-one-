@@ -37,6 +37,7 @@
 html {
   scroll-behavior: smooth;
   color-scheme: dark;
+  overflow-x: hidden;
 }
 
 body {
@@ -45,6 +46,24 @@ body {
   color: var(--text-main);
   min-height: 100vh;
   overflow-x: hidden;
+}
+
+/* Custom Sleek Dark Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070214;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(236, 72, 153, 0.5);
 }
 
 /* Typography Helpers */
@@ -5239,5 +5258,672 @@ input:checked + .slider:before {
     text-align: center;
   }
 }
+
+/* ==========================================================================
+   VIP AUTHENTICATION PAGE (EXACT FIGMA 1:1 REPLICATION)
+   ========================================================================== */
+.vip-auth-page-wrapper {
+  min-height: 100vh;
+  width: 100%;
+  position: relative;
+  background: #0b0416;
+  padding: 30px 24px 60px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ambient glow container - cleanly clips glows without creating an inner scrollbar */
+.vip-auth-glow-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Ambient glow */
+.vip-auth-bg-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(150px);
+  pointer-events: none;
+  opacity: 0.35;
+}
+
+.vip-auth-bg-glow.glow-top-left {
+  width: 520px;
+  height: 520px;
+  background: radial-gradient(circle, #9333ea 0%, rgba(147, 51, 234, 0) 70%);
+  top: -80px;
+  left: 10%;
+}
+
+.vip-auth-bg-glow.glow-bottom-right {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, #ff007a 0%, rgba(255, 0, 122, 0) 70%);
+  bottom: -100px;
+  right: 15%;
+}
+
+/* Top Back Navigation Bar */
+.vip-auth-nav-bar {
+  position: relative;
+  z-index: 20;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto 16px;
+}
+
+.vip-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #a59db8;
+  padding: 8px 16px;
+  border-radius: 9999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vip-back-home-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: #ec4899;
+  transform: translateX(-2px);
+}
+
+/* Split Two-Column Layout */
+.vip-auth-split-layout {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  max-width: 1200px;
+  width: 100%;
+  margin: auto;
+}
+
+/* LEFT COLUMN: VIP Host Illustration (No text above as requested) */
+.vip-auth-left-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  max-width: 540px;
+}
+
+.vip-host-illustration-container {
+  width: 100%;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.vip-host-svg {
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.6));
+}
+
+/* Speech bubble subtle breathing */
+.vip-speech-bubble-group {
+  transform-origin: 410px 242px;
+  animation: speechFloat 4s ease-in-out infinite;
+}
+
+.vip-host-svg text {
+  font-family: inherit, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  text-rendering: optimizeLegibility;
+}
+
+@keyframes speechFloat {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* RIGHT COLUMN: VIP PASS TICKET */
+.vip-auth-right-col {
+  width: 100%;
+  max-width: 440px;
+  flex-shrink: 0;
+}
+
+.vip-ticket-card {
+  position: relative;
+  background: #0f0720;
+  border: 1px solid rgba(168, 85, 247, 0.25);
+  border-radius: 28px;
+  box-shadow: 
+    0 25px 70px rgba(0, 0, 0, 0.75),
+    0 0 40px rgba(168, 85, 247, 0.14);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+/* Ticket Top Header */
+.vip-ticket-top-header {
+  padding: 24px 28px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.vip-barcode-strip {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 28px;
+  margin-bottom: 12px;
+  opacity: 0.85;
+}
+
+.vip-barcode-strip .b-bar {
+  height: 100%;
+  background: #ffffff;
+  border-radius: 1px;
+}
+
+.vip-barcode-strip .b-1 { width: 1.5px; }
+.vip-barcode-strip .b-2 { width: 3px; }
+.vip-barcode-strip .b-3 { width: 4.5px; }
+.vip-barcode-strip .b-4 { width: 6px; }
+
+.vip-ticket-brand {
+  font-size: 21px;
+  font-weight: 800;
+  color: #ff2e93;
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+
+.vip-ticket-subtitle {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: #eab308;
+  margin-top: 4px;
+  text-transform: uppercase;
+}
+
+/* Ticket Perforation with Round Edge Notches */
+.vip-ticket-perforation-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  height: 24px;
+}
+
+.vip-ticket-perforation-row .notch {
+  width: 24px;
+  height: 24px;
+  background: #0b0416;
+  border-radius: 50%;
+  z-index: 5;
+}
+
+.vip-ticket-perforation-row .notch-left {
+  margin-left: -12px;
+  border-right: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: inset -2px 0 6px rgba(0, 0, 0, 0.6);
+}
+
+.vip-ticket-perforation-row .notch-right {
+  margin-right: -12px;
+  border-left: 1px solid rgba(168, 85, 247, 0.3);
+  box-shadow: inset 2px 0 6px rgba(0, 0, 0, 0.6);
+}
+
+.vip-ticket-perforation-row .perforation-dashed-line {
+  flex: 1;
+  border-top: 1.5px dashed rgba(255, 255, 255, 0.16);
+  margin: 0 4px;
+}
+
+/* Ticket Body Content */
+.vip-ticket-body {
+  padding: 16px 28px 28px;
+}
+
+/* Toggle Pill with Liquid Sliding Indicator */
+.vip-auth-toggle-pill {
+  position: relative;
+  display: flex;
+  background: #080314;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 4px;
+  margin-bottom: 22px;
+  isolation: isolate;
+  user-select: none;
+}
+
+.vip-tab-slider {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  left: 4px;
+  width: calc(50% - 4px);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.04) 100%), #201338;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 9999px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.vip-tab-slider.slider-signin {
+  transform: translateX(0%);
+}
+
+.vip-tab-slider.slider-signup {
+  transform: translateX(100%);
+}
+
+.vip-tab-pill-btn {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  padding: 9px 0;
+  border: none;
+  background: transparent;
+  color: #948aa8;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 9999px;
+  cursor: pointer;
+  transition: color 0.28s cubic-bezier(0.16, 1, 0.3, 1), font-weight 0.2s ease;
+}
+
+.vip-tab-pill-btn:hover {
+  color: #d8cfea;
+}
+
+.vip-tab-pill-btn.active {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Title Block & Smooth Subtext Cross-fade */
+.vip-ticket-title-block {
+  margin-bottom: 18px;
+}
+
+.vip-ticket-heading {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 4px;
+  letter-spacing: -0.4px;
+}
+
+.vip-ticket-heading .pink-highlight {
+  color: #ec4899;
+}
+
+.vip-subtext-container {
+  position: relative;
+  min-height: 20px;
+}
+
+.vip-ticket-subtext {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  font-size: 12.5px;
+  color: #a59db8;
+  margin: 0;
+  line-height: 1.45;
+  transition: opacity 0.32s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
+}
+
+.vip-ticket-subtext.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.vip-ticket-subtext.inactive {
+  opacity: 0;
+  transform: translateY(4px);
+  pointer-events: none;
+}
+
+/* 1-Tap Quick Demo Enter Banner */
+.vip-demo-instant-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 14px;
+  background: rgba(236, 72, 153, 0.08);
+  border: 1px solid rgba(236, 72, 153, 0.28);
+  margin-bottom: 18px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vip-demo-instant-banner:hover {
+  background: rgba(236, 72, 153, 0.14);
+  border-color: #ec4899;
+  transform: translateY(-1px);
+}
+
+.demo-instant-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.demo-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ec4899 0%, #a855f7 100%);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.demo-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.demo-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.demo-gold-tag {
+  font-size: 8.5px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+  padding: 2px 6px;
+  border-radius: 9999px;
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+  border: 1px solid rgba(234, 179, 8, 0.4);
+}
+
+.demo-instant-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 9999px;
+  background: linear-gradient(90deg, #ec4899 0%, #c026d3 100%);
+  border: none;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Form & Liquid Collapsible Rows */
+.vip-auth-form {
+  display: flex;
+  flex-direction: column;
+}
+
+.vip-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+/* Liquid Collapsible Form Fields (zero-jerk height transition) */
+.vip-field-collapsible {
+  display: grid;
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    grid-template-rows 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: grid-template-rows, opacity, transform;
+}
+
+.vip-field-collapsible-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
+.vip-field-collapsible-inner .vip-field-group {
+  margin-bottom: 12px;
+}
+
+.vip-field-collapsible.collapsed {
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  visibility: hidden;
+  transition:
+    grid-template-rows 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    visibility 0s 0.38s;
+}
+
+.vip-field-collapsible.expanded {
+  visibility: visible;
+  transition:
+    grid-template-rows 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.32s 0.06s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.vip-field-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.vip-field-input {
+  width: 100%;
+  background: #090314;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #ffffff;
+  font-size: 13.5px;
+  font-family: inherit;
+  outline: none;
+  transition: all 0.2s ease;
+}
+
+.vip-field-input:focus {
+  border-color: #ec4899;
+  box-shadow: 0 0 12px rgba(236, 72, 153, 0.25);
+}
+
+.vip-field-input::placeholder {
+  color: #554e66;
+}
+
+.vip-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.vip-field-input.has-action {
+  padding-right: 56px;
+}
+
+.vip-show-toggle-btn {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #8b839e;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s ease;
+}
+
+.vip-show-toggle-btn:hover {
+  color: #ffffff;
+}
+
+/* Submit CTA with Ticker Text Transition */
+.vip-submit-cta-btn {
+  width: 100%;
+  padding: 13px;
+  border-radius: 12px;
+  background: linear-gradient(90deg, #ec4899 0%, #a855f7 100%);
+  border: none;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  box-shadow: 0 4px 18px rgba(236, 72, 153, 0.4);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.vip-submit-cta-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(236, 72, 153, 0.55);
+}
+
+.vip-cta-content-slider {
+  position: relative;
+  display: block;
+  height: 20px;
+  overflow: hidden;
+}
+
+.vip-cta-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.vip-cta-text.active {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.vip-cta-text.inactive-left {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+}
+
+.vip-cta-text.inactive-right {
+  opacity: 0;
+  transform: translateY(-16px);
+  pointer-events: none;
+}
+
+/* Social Section */
+.vip-social-section {
+  margin-top: 14px;
+}
+
+.vip-social-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 14px 0 12px;
+  color: #635b75;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.vip-social-divider::before,
+.vip-social-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.vip-google-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 11px 16px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.vip-google-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.22);
+  transform: translateY(-1px);
+}
+
+/* Responsive Media Queries */
+@media (max-width: 992px) {
+  .vip-auth-split-layout {
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .vip-auth-left-col {
+    max-width: 380px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vip-ticket-card {
+    border-radius: 20px;
+  }
+  .vip-ticket-body {
+    padding: 14px 20px 24px;
+  }
+}
+
 
 
