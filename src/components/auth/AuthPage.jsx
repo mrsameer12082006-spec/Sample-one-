@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { MEMBER_PROFILE } from '../../data/memberData';
+import AuthBackground from '../AuthBackground.jsx';
 
 /* ========================================================
    HIGH-FIDELITY VECTOR ILLUSTRATION OF VIP HOST & PORTAL
@@ -373,11 +374,8 @@ export default function AuthPage({ onLoginSuccess, onCancel, onToast }) {
 
   return (
     <div className="vip-auth-page-wrapper">
-      {/* Background ambient nocturnal glow (clipped safely inside container) */}
-      <div className="vip-auth-glow-container">
-        <div className="vip-auth-bg-glow glow-top-left" />
-        <div className="vip-auth-bg-glow glow-bottom-right" />
-      </div>
+      {/* Self-contained animated cosmic & neon background */}
+      <AuthBackground />
 
       {/* Top back navigation */}
       <div className="vip-auth-nav-bar">

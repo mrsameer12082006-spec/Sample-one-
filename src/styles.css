@@ -5266,7 +5266,7 @@ input:checked + .slider:before {
   min-height: 100vh;
   width: 100%;
   position: relative;
-  background: #0b0416;
+  background: transparent;
   padding: 30px 24px 60px;
   display: flex;
   flex-direction: column;
